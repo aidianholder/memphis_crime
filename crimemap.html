@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/geojson/0.5.0/geojson.min.js" integrity="sha512-rUpQ5KQCBMVGpXCqUdp0XBxui8zX3vUoSDSdYGdCm1J6rpi0Idm4oWorJhKrjT2tt3MZ88b/srejgl1gaSoWVw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src='https://unpkg.com/maplibre-gl@1.15.2/dist/maplibre-gl.js'></script>
+        <link href='https://unpkg.com/maplibre-gl@1.15.2/dist/maplibre-gl.css' rel='stylesheet' />
+        <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js" integrity="sha512-uto9mlQzrs59VwILcLiRYeLKPPbS/bT71da/OEBYEwcdNUk8jYIy+D176RYoop1Da+f9mvkYrmj5MCLZWEtQuA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" integrity="sha512-aOG0c6nPNzGk+5zjwyJaoRUgCdOrfSDhmMID2u4+OIslr0GjpLKo7Xm0Ao3xmpM4T8AmIouRkqwj1nrdVsLKEQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+        <style>
+            #map {position: absolute; top: 0; right: 0; left: 0; height: 640px;}
+
+            body {font-family: Copernicus, Georgia, Palatino, serif;}
+
+            .crimemarker {
+                display: block;
+                border: none;
+                border-radius: 50%;
+                cursor: pointer;
+                padding: 0;
+                }
+
+              .robbery {background: no-repeat center/50% url("../icons_small/robbery.png")}
+              .theft {background: no-repeat center/50% url("../icons_small/theft.png")}
+              .gta {background: no-repeat center/50% url("../icons_small/gta.png")}
+              .vr {background: no-repeat center/50% url("../icons_small/gta.png")}
+              .be {background: no-repeat center/50% url("../icons_small/be.png")}
+              .family {background: no-repeat center/50% url("../icons_small/family.png")}
+              .disorder {background: no-repeat center/50% url("../icons_small/disorder.png")}
+              .traffic {background: no-repeat center/50% url("../icons_small/traffic.png")}
+              .weapons {background: no-repeat center/50% url("../icons_small/weapons.png")}
+              .assault {background: no-repeat center/50% url("../icons_small/assault.png")}
+              .tfv {background: no-repeat center/50% url("../icons_small/tfv.png")}
+              .drugs {background: no-repeat center/50% url("../icons_small/drugs.png")}
+              .pc {background: no-repeat center/50% url("../icons_small/pc.png")}
+              .homicide {background: no-repeat center/50% url("../icons_small/homicide.png"); z-index:100; }
+
+              .maplibregl-popup-content {z-index:101;}
+
+              #slider-wrap{
+                      width: 25%;
+                      min-width: 200px;
+                    }
+
+
+                #slider-range {
+                    margin-top: 20px;
+                }
+                #daterange {
+                    width: 25%;
+                    min-width: 200px;
+                    margin: 10px 25% 10px 0;
+                }
+              
+              #layer-menu {
+                  font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+                  font-weight: 600;
+                  position: absolute;
+                  top: 10px;
+                  left: 10px;
+                  z-index: 1;
+                  border-radius: 3px;
+                  /*width: 240px;*/
+                  color: #fff;
+                  /*background-color: #18c0c9;*/
+              }
+
+              #layer-menu button {
+                text-decoration: none;
+                cursor: pointer;
+                margin: 10px;
+                padding: 10px;
+              }
+
+              .overlay {
+                  font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+              }
+
+              /*#crimeSelect {
+                margin: 20px 25%;
+
+              }*/
+
+              .crimeSelectWrap {
+                  width: 100%;
+              }
+
+              .hide {
+                  display: none;
+              }
+
+              #controlWrap {
+                  display: flex;
+                  flex-flow: row wrap;
+                  justify-content: center;
+              }
+
+             #infoWrap {
+                margin-top: 650px;
+                 display: flex;
+                 flex-flow: row wrap;
+                 justify-content: center;
+             }
+
+             #infoWrap p {
+                 margin: 8px 0;
+             }
+
+             #locator {
+                
+                 font-weight: 600;
+
+             }
+
+             .dateSliderText {float: left; border: 0; color: #f6931f; font-weight: bold; font-family: Arial, Helvetica, sans-serif;}
+              
+          </style>
+    </head>
+    <body>
+        <div id="map">
+            <a href="https://www.maptiler.com" style="position:absolute;left:10px;bottom:10px;z-index:999;"><img src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler logo"></a>
+        </div>
+
+        <nav id="layer-menu">
+              <button class="overlay" id="markersSelect">Show/Hide Crimes</button>
+              <button class="overlay" id="neighborhoodSelect">Show/Hide Neighborhoods</button>
+              <button class="overlay hide" id="returnHome">Back</button>
+        </nav>
+
+        <div id="infoWrap">
+            <div id="infoText">
+                <p id="locator">City of Memphis</p>
+                <p>So far this year Memphis Police report <span id="violentCrimes"></span> violent crimes, 
+                    <span id="propertyCrimes"></span> property crimes, and <span id="otherCrimes"></span> other crimes.</p>
+                <p>On the same date last year, MPD had reported <span id="lastYearViolentCrimes"></span> violent crimes, 
+                    <span id="lastYearPropertyCrimes"></span> property crimes, and <span id="lastYearOtherCrimes"></span> other
+                crimes.</p>
+            </div>
+            
+            
+        </div>
+
+        <div id="controlWrap">
+            <div id="slider-wrap">
+                <span class="dateSliderText">Select date: </span>
+                <span>
+                    <!--<label for="amount" style="float: left; font-weight:bold; font-family:Arial, Helvetica, sans-serif;">Date: </label>-->
+                    <input type="text" id="amount" class="dateSliderText"/>
+                </span>
+                <div id="slider-range"></div>
+                
+                    <input class="hide" type="text" id="daterange" name="daterange" value="" />
+                </div>
+            
+            <div class="crimeSelectWrap">
+                <select id="crimeSelect" name="crimeType">
+                    <option value="">--Select a type of crime--</option>
+                    <option value="H">Homicide</option>
+                    <option value="R">Robbery</option>
+                    <option value="VT">Auto Theft</option>
+                    <option value="BE">Breaking & Entering</option>
+                    <option value="D">Drugs</option>
+                </select>
+            </div>
+
+        </div>
+
+
+
+        <script>
+            var map = new maplibregl.Map({
+              container: 'map',
+              style: 'https://aidianholder.com/style_new_positron.json',
+              center: [-89.94792, 35.14069],
+              zoom: 10.50
+            });
+
+            map.addControl(new maplibregl.NavigationControl());
+            
+            let appState = {
+                'sday': null,
+                'eday': null,
+                'showHoods': false
+            }
+
+            $("#crimeSelect").change(function(){
+                clearMarkers();
+                let bounds =  [[-90.18715, 34.99439], [-89.72017, 35.26294]]
+                map.fitBounds(bounds, {
+                    padding: {top: 10, bottom:10, left: 25, right: 25}
+                    });
+                const sd = moment().subtract(1, 'years').format("YYYY-MM-DD")
+                const ed = moment().subtract(2, 'days').format("YYYY-MM-DD")
+                const crimeCat = $("#crimeSelect").val()
+                if(crimeCat != ""){
+                populateCrimeLayer(sd, ed, crimeCat, null)
+                $( "#slider-range" ).slider("destroy");
+                document.getElementById("amount").classList.toggle('hide');
+                document.getElementById("returnHome").classList.toggle('hide');
+                document.getElementById("markersSelect").classList.toggle('hide');
+                document.getElementById("neighborhoodSelect").classList.toggle('hide');
+                } else {goHome()};
+
+            })
+            
+            function formatDateString(dateString){
+              let d = new Date(dateString)
+                dy = d.getFullYear();
+                dm = d.getMonth() + 1;
+                dd = d.getDate();
+                return [dy, dm, dd].join('-')
+            }
+
+
+            $("#returnHome").click(function(){
+                goHome();
+            })
+
+            function goHome(){
+                clearMarkers();
+                map.setMaxBounds(null);
+                let bounds =  [[-90.18715, 34.99439], [-89.72017, 35.26294]]
+                map.fitBounds(bounds, {
+                    padding: {top: 10, bottom:10, left: 25, right: 25}
+                    });
+                document.getElementById("returnHome").classList.toggle('hide');
+                document.getElementById("markersSelect").classList.toggle('hide');
+                document.getElementById("neighborhoodSelect").classList.toggle('hide');
+                $("#crimeSelect").val("")
+                    .removeClass("hide")
+                map.removeLayer('hoods-line')
+                initYearSlider();
+                $("#daterange").addClass("hide")
+                document.getElementById("amount").classList.toggle('hide');
+                if(appState.showHoods){
+                    showNeighborhoods()
+                };
+                if(appState.sday){
+                    populateCrimeLayer(appState.sday, null, null, null);
+                }
+            }
+
+
+            function showNeighborhoods(){
+                map.addLayer({
+                  'id': 'neighborhoods-layer',
+                  'type': 'fill',
+                  'source': 'neighborhoods',
+                  'layout': {},
+                  'paint': {
+                    'fill-color': '#18c0c9',
+                    'fill-opacity': [
+                        'case',
+                        ['boolean', ['feature-state', 'hover'], false],
+                        1,
+                        0.3
+                    ]   
+                  }
+                })
+                map.addLayer({
+                  'id': 'neighborhoods-lines',
+                  'type': 'line',
+                  'source': 'neighborhoods',
+                  'layout': {},
+                  'paint': {
+                    'line-color': '#0080ff',
+                    'line-width': 0.5
+                  }
+                })
+                map.addLayer({
+                  'id': 'neighborhoods-label',
+                  'type': 'symbol',
+                  'source': 'neighborhoods',
+                  'layout': {
+                      "text-field": ["get", "hood_name"],
+                      "text-size": {
+                            "stops": [[10, 6], [11, 8]]
+                          },
+                   },
+                   "paint": {
+                      "text-halo-color": "rgba(255, 255, 255, 1)",
+                      "text-halo-width": 0.6
+                    }
+                })
+                let hoodID = null
+                map.on('mousemove', 'neighborhoods-layer', function(e){
+                    if (e.features.length > 0) {
+                        map.getCanvas().style.cursor = 'pointer';
+                        console.log(e.features[0].properties.id)
+                        if (hoodID) {
+                            map.removeFeatureState({
+                                source: 'neighborhoods',
+                                id: hoodID
+                            })
+                        }
+                        hoodID = e.features[0].id
+                        map.setFeatureState({
+                            source: 'neighborhoods',
+                            id: hoodID
+                        }, {
+                            hover: true
+                        })
+                    }
+                })
+                map.on('mouseleave', 'neighborhoods-layer', function(){
+                        if (hoodID){
+                            map.setFeatureState({
+                                source: 'neighborhoods',
+                                id: hoodID
+                            },
+                            {
+                                hover: false
+                            }
+                        );
+                    }
+                    hoodID = null;
+                    map.getCanvas().style.cursor = '';
+                })
+                map.on("click", "neighborhoods-layer", function(e) {
+                    if (e.features.length > 0) {
+                        let hoodName = e.features[0].properties.hood_name;
+                        let bboxString = e.features[0].properties.bbox_bbox;
+                        let bboxArray = bboxString.split(',');
+                        let hoodBBOX = [[parseFloat(bboxString.split(',')[0]),parseFloat(bboxString.split(',')[1])],[parseFloat(bboxString.split(',')[2]), parseFloat(bboxString.split(',')[3])]];
+                        let crimeBBOX = [[parseFloat(bboxString.split(',')[1]),parseFloat(bboxString.split(',')[0])],[parseFloat(bboxString.split(',')[3]), parseFloat(bboxString.split(',')[2])]];
+                        visitHood(hoodName, hoodBBOX);
+                        fetchCrime30(crimeBBOX);
+                    }
+                });
+            }
+
+            $("#markersSelect").click(function(){
+                let oldMarkers = document.getElementsByClassName('crimemarker');
+                let oldMarkersArray = Array.from(oldMarkers);
+                if(oldMarkersArray.length > 0){
+                  oldMarkersArray.forEach(function(marker, index, array){marker.remove()});
+                  appState.sday = null;
+                  appState.eday = null;
+                } else {
+                  let ds = $("#amount").val();
+                  let convertedDate = formatDateString(ds);
+                  populateCrimeLayer(convertedDate);
+                  appState.sday = convertedDate;
+                }
+            })
+
+            $("#neighborhoodSelect").click(function(){
+                if (map.getLayer('neighborhoods-layer')){
+                    map.removeLayer('neighborhoods-layer');
+                    map.removeLayer('neighborhoods-lines');
+                    map.removeLayer('neighborhoods-label');
+                    appState.showHoods = false
+                } else {
+                    showNeighborhoods();
+                    appState.showHoods = true
+                }
+            });
+
+            function visitHood(district, bounds){
+                map.fitBounds(bounds, {
+                        padding: {top: 10, bottom:10, left: 25, right: 25}
+                    });
+                map.removeLayer('neighborhoods-label');
+                map.removeLayer('neighborhoods-layer');
+                map.removeLayer('neighborhoods-lines');
+                map.addLayer({
+                  'id': 'hoods-line',
+                  'type': 'line',
+                  'source': 'neighborhoods',
+                  'layout': {},
+                  'paint': {
+                    'line-color': '#0080ff',
+                    'line-width': 3
+                  },
+                  "filter": [
+                    "all",
+                    ["==", "hood_name", district]
+                    ]
+                })
+                $("#locator").html(district);
+                document.getElementById("returnHome").classList.toggle('hide');
+                document.getElementById("markersSelect").classList.toggle('hide');
+                document.getElementById("neighborhoodSelect").classList.toggle('hide');
+                document.getElementById("crimeSelect").classList.toggle('hide');
+                $( "#slider-range" ).slider("destroy");
+                document.getElementById("amount").classList.toggle('hide');
+                document.getElementById("daterange").classList.toggle('hide');
+                initMonthPicker()
+            }
+
+            function setBoundsAsMax(){
+                viewportHood = map.getBounds()
+                console.log(viewportHood)
+                map.setMaxBounds(viewportHood);
+            }
+
+            function clearMarkers(){
+                oldMarkers = document.getElementsByClassName('crimemarker');
+                oldMarkersArray = Array.from(oldMarkers);
+                if(oldMarkersArray.length > 0){
+                  oldMarkersArray.forEach(function(marker, index, array){marker.remove()});
+                };
+              }
+
+            function defineIcon(categoryAbbreviation){
+                switch(categoryAbbreviation){
+                    case 'A': 
+                        iconClass = 'crimemarker assault';
+                        break;
+                    case 'T':
+                        iconClass = 'crimemarker theft';
+                        break;
+                    case 'TV':
+                        iconClass = 'crimemarker tfv';
+                        break;
+                    case 'VR':
+                        iconClass = 'crimemarker vr';
+                        break;
+                    case 'PC':
+                        iconClass = 'crimemarker pc';
+                        break;
+                    case 'H':
+                        iconClass = 'crimemarker homicide';
+                        break;
+                    case 'W':
+                        iconClass = 'crimemarker weapons';
+                        break;
+                    case 'BE':
+                        iconClass = 'crimemarker be';
+                        break;
+                    case 'D':
+                        iconClass = 'crimemarker drugs';
+                        break;
+                    case 'R':
+                        iconClass = "crimemarker robbery";
+                        break;
+                    case 'VT': 
+                        iconClass = 'crimemarker gta';
+                        break;
+                    case 'AR':
+                        iconClass = 'crimemarker arson';
+                        break;
+                    case 'DO':
+                        iconClass = 'crimemarker disorder';
+                        break;
+                    }
+                    return(iconClass);
+                }
+
+            
+            function fetchCrime30(bboxBounds){
+                let dNow = new Date()
+                dNow.setDate(dNow.getDate() - 2);
+                let lastMonth = new Date();
+                lastMonth.setDate(lastMonth.getDate() - 32);
+                let endDate = dNow.getFullYear() + "-" + (dNow.getMonth() + 1) + "-" + dNow.getDate()
+                let startDate = lastMonth.getFullYear() + "-" + (lastMonth.getMonth() + 1) + "-" + lastMonth.getDate()
+                populateCrimeLayer(startDate, endDate, null, bboxBounds);
+            };
+
+            
+            async function fetchCrime(startDate, endDate=null, category=null, bbox=null){
+                let apiString = "https://dev.dailymemphian.com/api/crime/query?"
+                if(startDate){
+                    apiString += "DATE="
+                    apiString += startDate
+                }
+                if(endDate){
+                    apiString += ','
+                    apiString += endDate
+                }
+                if(category){
+                    apiString += "&CATEGORY="
+                    apiString += category
+                }
+                if(bbox){
+                    apiString += "&BBOX="
+                    apiString += bbox
+                }
+                const response = await fetch(apiString)
+                const data = await response.json();
+                return data;
+            };
+
+
+            async function populateCrimeLayer(crimeDate, endCrimeDate, crimeCategory, incidentBBOX) {
+                clearMarkers();
+                const crimeData = await fetchCrime(crimeDate, endCrimeDate, crimeCategory, incidentBBOX);
+                //console.log(crimeData)
+                //const crimeDataArray = crimeData.result;
+                let points = []
+                crimeData.result.forEach(function(result, index, array){
+                    let crime_text = "<strong>" + result.crime_type.name + "</strong><br/>" + result.crime_date + "<br/>" + result.address
+                    let popup = new maplibregl.Popup({offset:8, closeOnMove:true}).setHTML(crime_text)
+                    let el = document.createElement('div')
+                    let c = result.crime_type.categoryCode
+                    el.className = defineIcon(c)
+                    if(map.getZoom() > 11){
+                    el.style.width = '48px';
+                    el.style.height = '48px';
+                    } else {
+                    el.style.width = '24px';
+                    el.style.height = '24px';
+                    }
+                    let lngLat = [result.y_cord, result.x_cord]
+                    if(points.includes(result.location)){
+                        lngLat = [parseFloat(result.y_cord) - 0.001, parseFloat(result.x_cord) - 0.001]
+                        //console.log('changed to: ', lngLat)
+                    }
+                    points.push(result.location)
+                    let marker = new maplibregl.Marker(el)
+                      .setLngLat(lngLat)
+                      .setPopup(popup)
+                      .addTo(map);
+                })
+                
+            };
+
+            map.on('load', function() {
+              let d = new Date();
+              d.setDate(d.getDate() - 2);
+              let queryDate = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+              populateCrimeLayer(queryDate);
+              initYearSlider();
+              appState.sday = queryDate;
+              appState.eday = null;
+              appState.showHoods = false;
+              map.addSource('neighborhoods',{
+                type: 'geojson',
+                data: "https://aidianholder.com/neighborhoods_4326.json",
+                generateId: true
+              });
+            });
+
+
+            map.on('zoomend', function(){
+              let crimeZoomLevel = map.getZoom()
+              let crimeMarkers = document.getElementsByClassName('crimemarker');
+              let crimeMarkersArray = Array.from(crimeMarkers);
+              if(crimeZoomLevel > 11){
+                  crimeMarkersArray.forEach(function(marker, index, array){
+                    marker.style.height = '48px';
+                    marker.style.width = '48px';
+                  });
+              } else {
+                  crimeMarkersArray.forEach(function(marker, index, array){
+                    marker.style.height = '24px';
+                    marker.style.width = '24px';
+                  });
+              };
+            });
+
+
+            function initMonthPicker(){
+
+                    const begin30 = moment().subtract(32, 'days');
+                    const end30 = moment().subtract(2, 'days');
+                    
+                    const defaultString = begin30.toString() + '-' + end30.toString();
+                    console.log(defaultString)
+                    document.getElementById("daterange").value = defaultString
+                    
+                    $('input[name="daterange"]').daterangepicker({
+                        opens: 'left',
+                        startDate: begin30,
+                        endDate: end30,
+                        minDate: moment().subtract(1, 'years'),
+                        maxDate: moment().subtract(2, 'days')
+                    }, function(start, end, label) {
+                        let hoodFeature = map.queryRenderedFeatures({layers:['hoods-line']})
+                        let rawBBOX = hoodFeature[0].properties.bbox_bbox;
+                        let storedBBOX = [[parseFloat(rawBBOX.split(',')[1]),parseFloat(rawBBOX.split(',')[0])],[parseFloat(rawBBOX.split(',')[3]), parseFloat(rawBBOX.split(',')[2])]];
+                        console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD') + ' bbox: ' + storedBBOX);
+                        populateCrimeLayer(start.format('YYYY-MM-DD'), end.format('YYYY-MM-DD'), null, storedBBOX);
+                        appState.sday = start.format('YYYY-MM-DD')
+                        appState.eday = end.format('YYYY-MM-DD')
+                    });
+            }
+            
+
+            function initYearSlider() {
+                //debugger;
+                var foo = new Date()
+                bar = foo.getFullYear() -1;
+                var previousYear = new Date();
+                previousYear.setFullYear(bar);
+                let d = new Date()
+                d.setDate(d.getDate() - 2)
+                $( "#slider-range" ).slider({
+                  range: false,
+                  min: previousYear.getTime() / 1000,
+                  max: d.getTime() / 1000,
+                  step: 86400,
+                  values: [ new Date().getTime() / 1000 ],
+                  slide: function( event, ui ) {
+                    $( "#amount" ).val( (new Date(ui.values[ 0 ] *1000).toDateString() ));
+                  },
+                  stop: function( event, ui ) {
+                    let newQueryDate = new Date(ui.values[ 0 ] *1000)
+                    let newQueryDateString = newQueryDate.getFullYear() + "-" + (newQueryDate.getMonth() + 1) + "-" + newQueryDate.getDate()
+                    clearMarkers();
+                    populateCrimeLayer(newQueryDateString);
+                    appState.sday = newQueryDateString;
+                    appState.eday = null;
+                  } 
+                });
+                $( "#amount" ).val( (new Date($( "#slider-range" ).slider( "values", 0 )*1000).toDateString()));
+              };
+
+
+                /*
+                https://dev.dailymemphian.com/api/crime/query?DATE=2021-12-01,2021-12-31&BBOX=-89.93132,35.07779,-89.89297,35.11516
+                https://[servername]/api/crime/query?DATE=2021-08-24,2021-08-24&CATEGORY="PC","H"&BBOX=35.1327,-90.0638,35.1343,-90.0625
+                   let crime_text = "<strong>" + result.crime_type.name + "</strong><br/>" + result.crime_date + "<br/>" + result.address 
+                   
+                   let crimeLayerGeojson = GeoJSON.parse(crimeDataArray, {Point: ['x_cord', 'y_cord']});
+                //console.log(crimeLayerGeojson)
+                map.addSource('crimeLayer',{
+                    type: 'geojson',
+                    data: crimeLayerGeojson
+                });
+                map.addLayer({
+                    id:'crime',
+                    type: 'circle',
+                    source: 'crimeLayer',
+                    paint: {
+                        'circle-color': '#11b4da',
+                        'circle-radius': 4,
+                        'circle-stroke-width': 1,
+                        'circle-stroke-color': '#fff'
+                    }
+                })*/
+
+
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
